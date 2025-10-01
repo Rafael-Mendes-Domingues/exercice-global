@@ -7,28 +7,47 @@ on:
       - main
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Node
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
-      - run: cd app && npm install && npm test || echo "No tests yet"
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
 
   deploy-dev:
-    if: github.ref == "refs/heads/dev"
     runs-on: ubuntu-latest
+    needs: test
+    if: ${{ github.ref == 'refs/heads/dev' }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Deploy to Dev
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible sshpass
+
+      - name: Deploy to DEV
         run: ansible-playbook -i ansible/inventory/dev.ini ansible/playbooks/deploy-dev.yml
 
   deploy-prod:
-    if: github.ref == "refs/heads/main"
     runs-on: ubuntu-latest
+    needs: test
+    if: ${{ github.ref == 'refs/heads/main' }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Deploy to Prod
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible sshpass
+
+      - name: Deploy to PROD
         run: ansible-playbook -i ansible/inventory/prod.ini ansible/playbooks/deploy-prod.yml
