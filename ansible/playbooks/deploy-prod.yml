@@ -1,0 +1,27 @@
+﻿---
+- hosts: serveur-prod
+  tasks:
+    - name: Installer dépendances
+      apt:
+        name: [git, nodejs, npm]
+        state: present
+        update_cache: yes
+
+    - name: Cloner repo
+      git:
+        repo: "https://github.com/Rafael-Mendes-Domingues/exercice-global.git"
+        dest: /opt/app
+        version: main
+
+    - name: Installer dépendances Node
+      command: npm install
+      args:
+        chdir: /opt/app/app
+
+    - name: Lancer l app
+      command: node index.js
+      args:
+        chdir: /opt/app/app
+      async: 30
+      poll: 0
+
